@@ -76,16 +76,35 @@ class GameTable(object):
 		self.update()
 
 	def restart_game(self) -> None:
-		pass
+		# Restarts the game by pressing the smiley button in the top side
+		global_x = self.ms_dimensions["left"] + self.ms_dimensions["width"] // 2
+		global_y = self.ms_dimensions["top"] + 20
+
+		win32api.SetCursorPos((global_x, global_y))
+		win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, global_x, global_y, 0, 0)
+		win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, global_x, global_y, 0, 0)
+		self.update()
 
 	def game_lost(self) -> bool:
-		pass
+		# Checks if the game has been lost
+		for index_rows in range(self.rows):
+			if "H" in self.table[index_rows]:
+				return True
+		return False
 
 	def game_won(self) -> bool:
-		pass
+		# Checks if the game has been won
+		for index_rows in range(self.rows):
+			for index_columns in range(self.rows):
+				if self.table[index_rows][index_columns] == "_": 
+					return False
+		return True
 
 	def game_over(self) -> bool:
-		pass
+		# Checks if the game has ended
+		if self.game_lost() or self.game_won():
+			return True
+		return False
 
 	def print_game(self) -> bool:
 		# Prints the current state of the board
