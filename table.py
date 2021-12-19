@@ -49,7 +49,50 @@ class GameTable(object):
 				self.table[index_rows].append("_")
 
 	def update(self) -> None:
-		pass
+		# The symbols are the following:
+		# "_" -> undiscovered cell
+		# "0-8" -> cell with a number in it
+		# "F" -> cell with a flag in it
+		# "M" -> cell with mine in it
+		# "W" -> cell wrongly flagged (there was no mine in it)
+		# "H" -> cell hit by player, the one with a mine in it (the one that made him lose)
+		# Use the method "print_game" to visualize such a game state
+		self.image_table = self.sct.grab(self.ms_dimensions)
+		for index_rows in range(self.rows):
+			for index_columns in range(self.columns):
+				previously_changed = False
+				middle_pixel_color = self.image_table.pixel((index_columns + 1) * GameTable.SQUARE_WIDTH + GameTable.IGNORED_PIXELS_X - 8, (index_rows + 1) * GameTable.SQUARE_HEIGHT + GameTable.IGNORED_PIXELS_Y - 8)
+					
+				if middle_pixel_color == GameTable.GREY: # check for free square
+					down_pixel = self.image_table.pixel((index_columns + 1) * GameTable.SQUARE_WIDTH + GameTable.IGNORED_PIXELS_X - 1, (index_rows + 1) * GameTable.SQUARE_HEIGHT + GameTable.IGNORED_PIXELS_Y - 1)
+					if down_pixel == GameTable.DARK_GREY: # it's a free square
+						self.table[index_rows][index_columns] = "_"
+						previously_changed = True
+				if middle_pixel_color == GameTable.BLACK: # check for bomb and for flag
+					upper_pixel = self.image_table.pixel((index_columns + 1) * GameTable.SQUARE_WIDTH + GameTable.IGNORED_PIXELS_X - 10, (index_rows + 1) * GameTable.SQUARE_HEIGHT + GameTable.IGNORED_PIXELS_Y - 10)
+					if upper_pixel == GameTable.WHITE: # it's a bomb
+						leftPixel = self.image_table.pixel((index_columns + 1) * GameTable.SQUARE_WIDTH + GameTable.IGNORED_PIXELS_X - 1, (index_rows + 1) * GameTable.SQUARE_HEIGHT + GameTable.IGNORED_PIXELS_Y - 8)
+						if leftPixel == GameTable.RED:
+							self.table[index_rows][index_columns] = "H"
+						else:
+							self.table[index_rows][index_columns] = "M"
+						previously_changed = True
+					if upper_pixel == GameTable.RED: # it's a flag
+						self.table[index_rows][index_columns] = "F"
+						previously_changed = True
+	
+				if middle_pixel_color == GameTable.RED: # check for wrong bomb flagged
+					leftPixel = self.image_table.pixel((index_columns + 1) * GameTable.SQUARE_WIDTH + GameTable.IGNORED_PIXELS_X - 6, (index_rows + 1) * GameTable.SQUARE_HEIGHT + GameTable.IGNORED_PIXELS_Y - 8)
+					if leftPixel == GameTable.BLACK:
+						self.table[index_rows][index_columns] = "W"
+						previously_changed = True
+
+				if previously_changed == False:
+					try:
+						self.table[index_rows][index_columns] = str(GameTable.NUMBERS[middle_pixel_color])
+					except KeyError:
+						print("The Minesweeper window must be visible at all times!")
+						exit()
 
 	def left_click(self, coordinate_x: int, coordinate_y: int) -> None:
 		# Left clicks the cell on the board with the given coordinates (discoveres it)
